@@ -13,7 +13,7 @@ export const store = {
     trustedShops: [
         {
             id: 'yakuza',
-            name: 'Y A K Y Z A 💚🍫',
+            name: 'YAKUZA',
             admin: 'Yakuzzaa27',
             chat: 'https://t.me/+UtnbRA0g0wg5ZTQ6',
             bot: 'Yakuzashp27bot',
@@ -22,21 +22,21 @@ export const store = {
         },
         {
             id: 'kolyan',
-            name: 'K O L Y A N 💚',
+            name: 'KOLYAN',
             admin: 'Kolyan_0420',
             chat: 'https://t.me/+F-x6Sr9uGkZmZGJh',
             color: 'green'
         },
         {
             id: 'felix',
-            name: 'F E L I X X X 💚',
+            name: 'FELIXXX',
             chat: 'https://t.me/+0Xt2CWMvSygyMTcx',
             bot: 'boxi_Fill1_bot',
             color: 'teal'
         },
         {
             id: 'b13',
-            name: 'B 13 🍫',
+            name: 'B 13',
             admin: 'No_Name_hap',
             chat: 'https://t.me/+7WMtiC8037Y4N2Iy',
             bot: 'hapaus_bot',
@@ -45,7 +45,7 @@ export const store = {
         },
         {
             id: 'antibiotik',
-            name: 'АНТИБИОТИК ❤️',
+            name: 'АНТИБИОТИК',
             admin: 'AntiBiotiK35',
             chat: 'https://t.me/+5Cgpn1ycdP9hMDQ6',
             reviews: 'https://telegram.me/+zZeT9yS_KKZmZWQ6',
@@ -54,6 +54,8 @@ export const store = {
     ],
     state: {
         isAppLoading: true,
+        currentView: 'home', // 'home' | 'details'
+        selectedShopId: null,
         reviews: [],
         error: null
     },
@@ -68,5 +70,18 @@ export const store = {
     setState(newState) {
         this.state = { ...this.state, ...newState };
         this.notify();
+    },
+    // Навигация
+    navigateTo(view, shopId = null) {
+        this.setState({ currentView: view, selectedShopId: shopId });
+        
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            if (view === 'details') {
+                tg.BackButton.show();
+            } else {
+                tg.BackButton.hide();
+            }
+        }
     }
 };
