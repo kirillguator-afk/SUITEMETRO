@@ -7,12 +7,10 @@ import { renderSplashScreen } from './components/SplashScreen.js';
 
 const app = document.getElementById('app');
 
-// Глобальная функция навигации
 window.navigateToShop = (id) => {
     const tg = window.Telegram?.WebApp;
     if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
     
-    // Эффект перехода: Сначала легкое размытие контента
     const content = document.querySelector('.view-wrapper');
     if (content) content.style.opacity = '0';
     
@@ -20,6 +18,9 @@ window.navigateToShop = (id) => {
         store.navigateTo('details', id);
     }, 200);
 };
+
+// Экспортируем стор в window для доступа из HTML
+window.store = store;
 
 function initTelegram() {
     if (window.Telegram && window.Telegram.WebApp) {
@@ -37,7 +38,6 @@ function initTelegram() {
 }
 
 function render() {
-    // Если сплэш еще активен, не рендерим основной контент
     if (store.state.isAppLoading) {
         if (!document.getElementById('splash')) {
             app.innerHTML = renderSplashScreen();
@@ -45,7 +45,6 @@ function render() {
         return;
     }
 
-    // Отрисовка вьюх с оберткой для анимации
     let content = '';
     if (store.state.currentView === 'home') {
         content = `
@@ -57,7 +56,7 @@ function render() {
         `;
     } else {
         const shop = store.trustedShops.find(s => s.id === store.state.selectedShopId);
-        content = renderShopDetails(shop);
+        content = renderShopDetails(shop, store.state);
     }
 
     app.innerHTML = `
@@ -70,7 +69,6 @@ function render() {
     `;
 }
 
-// Продвинутая логика загрузки
 async function startApp() {
     initTelegram();
     render();
@@ -79,7 +77,6 @@ async function startApp() {
     const percent = document.getElementById('loader-percent');
     let progress = 0;
 
-    // Имитация плавной загрузки с разными шагами
     const interval = setInterval(() => {
         progress += Math.random() * 15;
         if (progress > 100) progress = 100;
@@ -104,7 +101,6 @@ function finishLoading() {
         splash.classList.add('exit');
         setTimeout(() => {
             store.setState({ isAppLoading: false });
-            // После удаления сплэша разрешаем скролл
             document.body.style.overflow = 'auto';
         }, 1000);
     }

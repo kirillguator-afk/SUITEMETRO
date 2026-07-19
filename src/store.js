@@ -18,6 +18,7 @@ export const store = {
             chat: 'https://t.me/+UtnbRA0g0wg5ZTQ6',
             bot: 'Yakuzashp27bot',
             reviews: 'https://t.me/+QzHJQ9FImBQxNzdi',
+            reviewChannelId: '@Yakuzashp27_reviews', // Условный ID для бота
             color: 'emerald'
         },
         {
@@ -25,6 +26,7 @@ export const store = {
             name: 'KOLYAN',
             admin: 'Kolyan_0420',
             chat: 'https://t.me/+F-x6Sr9uGkZmZGJh',
+            reviewChannelId: '@kolyan_reviews',
             color: 'green'
         },
         {
@@ -32,6 +34,7 @@ export const store = {
             name: 'FELIXXX',
             chat: 'https://t.me/+0Xt2CWMvSygyMTcx',
             bot: 'boxi_Fill1_bot',
+            reviewChannelId: '@felix_reviews',
             color: 'teal'
         },
         {
@@ -41,6 +44,7 @@ export const store = {
             chat: 'https://t.me/+7WMtiC8037Y4N2Iy',
             bot: 'hapaus_bot',
             reviews: 'https://t.me/+JGqo0wDUWxFmMTIy',
+            reviewChannelId: '@b13_reviews',
             color: 'amber'
         },
         {
@@ -49,12 +53,14 @@ export const store = {
             admin: 'AntiBiotiK35',
             chat: 'https://t.me/+5Cgpn1ycdP9hMDQ6',
             reviews: 'https://telegram.me/+zZeT9yS_KKZmZWQ6',
+            reviewChannelId: '@antibiotik_reviews',
             color: 'rose'
         }
     ],
     state: {
         isAppLoading: true,
-        currentView: 'home', // 'home' | 'details'
+        isReviewsLoading: false,
+        currentView: 'home', 
         selectedShopId: null,
         reviews: [],
         error: null
@@ -71,17 +77,34 @@ export const store = {
         this.state = { ...this.state, ...newState };
         this.notify();
     },
-    // Навигация
-    navigateTo(view, shopId = null) {
-        this.setState({ currentView: view, selectedShopId: shopId });
+
+    async navigateTo(view, shopId = null) {
+        this.setState({ currentView: view, selectedShopId: shopId, reviews: [] });
         
         const tg = window.Telegram?.WebApp;
         if (tg) {
             if (view === 'details') {
                 tg.BackButton.show();
+                // Загружаем отзывы при переходе
+                this.loadShopReviews(shopId);
             } else {
                 tg.BackButton.hide();
             }
+        }
+    },
+
+    async loadShopReviews(shopId) {
+        const shop = this.trustedShops.find(s => s.id === shopId);
+        if (!shop) return;
+
+        this.setState({ isReviewsLoading: true });
+        
+        try {
+            const { TelegramService } = await import('./services/api.js');
+            const reviews = await TelegramService.fetchReviewsForShop(shop.reviewChannelId);
+            this.setState({ reviews, isReviewsLoading: false });
+        } catch (err) {
+            this.setState({ error: "Не удалось загрузить отзывы", isReviewsLoading: false });
         }
     }
 };
