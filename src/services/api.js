@@ -1,91 +1,82 @@
 
 /**
- * TelegramService - Principal Архитектура для работы с Telegram API
+ * TelegramService - Усовершенствованная логика с поддержкой ручной выгрузки
  */
 export class TelegramService {
     static TOKEN = '8944669647:AAFyco_C0F-xv2InKGndHBmaGHBIIZmvQ_w';
     static BASE_URL = `https://api.telegram.org/bot${this.TOKEN}`;
 
     /**
-     * Получает реальные сообщения из канала.
-     * ПРИМЕЧАНИЕ: Bot API требует, чтобы бот был администратором в канале.
-     * Для получения истории в браузере (CORS) используется структура fetch с обработкой.
+     * Получает отзывы (Смешивает API канала и ручные отзывы из локального хранилища)
      */
-    static async fetchReviewsForShop(channelId) {
+    static async fetchReviewsForShop(shopId, channelId) {
         try {
-            // Для получения реальной истории сообщений через Bot API обычно используется 
-            // механизм webhook или getUpdates, но для "вытягивания" истории из канала 
-            // в режиме реального времени лучше всего работает парсинг публичного t.me/s/ 
-            // или запрос к кастомному middleware.
-            
-            // В данной реализации мы имитируем запрос к API и парсинг полученных JSON объектов сообщений
-            const response = await fetch(`${this.BASE_URL}/getChat?chat_id=${channelId}`).catch(() => null);
-            
-            // Если запрос заблокирован CORS (типично для браузера), мы переходим на 
-            // логику парсинга через публичный эндпоинт или заготовленный интерфейс.
-            
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Имитация задержки сети
+            await new Promise(resolve => setTimeout(resolve, 800)); // Имитация сети
 
-            // Реальная логика маппинга данных из Telegram Message Object
-            const rawMessages = await this._getRawMessages(channelId);
+            // 1. Получаем "ручные" отзывы из локальной БД/Хранилища
+            const manualReviews = JSON.parse(localStorage.getItem(`manual_reviews_${shopId}`) || '[]');
+
+            // 2. Получаем отзывы из Telegram канала (имитация парсинга последних сообщений)
+            const channelReviews = await this._getRawMessages(channelId);
             
-            return rawMessages.map(msg => ({
+            const mappedChannel = channelReviews.map(msg => ({
                 id: msg.message_id,
                 author: msg.author_signature || "Покупатель",
-                text: msg.text || msg.caption || "Без текста",
+                text: msg.text || msg.caption || "",
                 date: this._formatTelegramDate(msg.date),
                 rating: this._estimateRating(msg.text || ""),
                 verified: true
             }));
 
+            // Объединяем (Сначала ручные, потом из канала)
+            return [...manualReviews, ...mappedChannel];
+
         } catch (error) {
-            console.error("Critical API Error:", error);
-            throw new Error("Не удалось синхронизироваться с каналом");
+            console.error("Sync Error:", error);
+            throw new Error("Ошибка синхронизации данных");
         }
     }
 
     /**
-     * Имитация получения массива сообщений (в реальной среде здесь fetch к вашему серверу-прослойке)
+     * Метод для "пересылки" (сохранения) отзыва из M-Panel
      */
+    static async saveManualReview(shopId, reviewData) {
+        // В реальном мире здесь: fetch('YOUR_BACKEND/save', { method: 'POST', ... })
+        const existing = JSON.parse(localStorage.getItem(`manual_reviews_${shopId}`) || '[]');
+        
+        const newReview = {
+            id: Date.now(),
+            author: reviewData.author,
+            text: reviewData.text,
+            rating: parseInt(reviewData.rating),
+            date: "Только что (M-Panel)",
+            verified: true,
+            isManual: true
+        };
+
+        existing.unshift(newReview);
+        localStorage.setItem(`manual_reviews_${shopId}`, JSON.stringify(existing));
+        return true;
+    }
+
     static async _getRawMessages(channelId) {
-        // Данные на основе реального канала YAKUZA (+QzHJQ9FImBQxNzdi)
-        // В реальном проде здесь будет: return fetch('your-proxy-api/getHistory?id=' + channelId)
+        // Базовый набор для YAKUZA и других
         return [
             {
                 message_id: 101,
-                author_signature: "Yakuza_User",
-                text: "Забрал клад в два касания. Качество 10/10, вес в норме. Рекомендую YAKUZA! 🍫🍀",
+                author_signature: "User_Sync",
+                text: "YAKUZA — лучший сервис в сети! 💚🍫",
                 date: Math.floor(Date.now() / 1000) - 3600
-            },
-            {
-                message_id: 102,
-                author_signature: "Dmitry_K",
-                text: "Все ровно. Место тихое, шкуроходы не найдут. Сервис на высоте ⭐⭐⭐⭐⭐",
-                date: Math.floor(Date.now() / 1000) - 86400
-            },
-            {
-                message_id: 103,
-                author_signature: "Ivan_Green",
-                text: "Бот выдал моментально. Оператор вежливый. Буду брать ещё.",
-                date: Math.floor(Date.now() / 1000) - 172800
             }
         ];
     }
 
     static _formatTelegramDate(unixTimestamp) {
         const date = new Date(unixTimestamp * 1000);
-        const now = new Date();
-        const diff = now - date;
-        
-        if (diff < 86400000) return "Сегодня " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         return date.toLocaleDateString('ru-RU');
     }
 
     static _estimateRating(text) {
-        const lowerText = text.toLowerCase();
-        if (lowerText.includes('10/10') || lowerText.includes('5/5') || lowerText.includes('⭐⭐⭐⭐⭐')) return 5;
-        if (lowerText.includes('отлично') || lowerText.includes('рекомендую')) return 5;
-        if (lowerText.includes('хорошо') || lowerText.includes('нормально')) return 4;
-        return 5; // По умолчанию для положительных каналов
+        return text.includes('лучший') || text.includes('10/10') ? 5 : 4;
     }
 }

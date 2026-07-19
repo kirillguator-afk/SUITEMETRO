@@ -4,22 +4,22 @@ import { renderHeader } from './components/Header.js';
 import { renderShopSection } from './components/ShopSection.js';
 import { renderShopDetails } from './components/ShopDetails.js';
 import { renderSplashScreen } from './components/SplashScreen.js';
+import { renderAdminPanel } from './components/AdminPanel.js';
 
 const app = document.getElementById('app');
 
 window.navigateToShop = (id) => {
     const tg = window.Telegram?.WebApp;
     if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-    
     const content = document.querySelector('.view-wrapper');
     if (content) content.style.opacity = '0';
-    
-    setTimeout(() => {
-        store.navigateTo('details', id);
-    }, 200);
+    setTimeout(() => store.navigateTo('details', id), 200);
 };
 
-// Экспортируем стор в window для доступа из HTML
+window.openAdmin = () => {
+    store.navigateTo('mpanel');
+};
+
 window.store = store;
 
 function initTelegram() {
@@ -39,9 +39,7 @@ function initTelegram() {
 
 function render() {
     if (store.state.isAppLoading) {
-        if (!document.getElementById('splash')) {
-            app.innerHTML = renderSplashScreen();
-        }
+        if (!document.getElementById('splash')) app.innerHTML = renderSplashScreen();
         return;
     }
 
@@ -49,14 +47,22 @@ function render() {
     if (store.state.currentView === 'home') {
         content = `
             ${renderHeader(store.config)}
+            ${store.state.isAdmin ? `
+                <div class="px-5 mb-4">
+                    <button onclick="window.openAdmin()" class="w-full p-4 glass-card rounded-2xl flex items-center justify-center gap-3 border-emerald-500/30 text-emerald-500 font-bold text-xs uppercase tracking-widest active:scale-95 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                        Открыть M-PANEL
+                    </button>
+                </div>
+            ` : ''}
             ${renderShopSection(store.trustedShops)}
-            <footer class="p-8 text-center opacity-20">
-                <p class="text-[8px] font-black tracking-[0.4em] uppercase">Encrypted Network v2.0</p>
-            </footer>
         `;
-    } else {
+    } else if (store.state.currentView === 'details') {
         const shop = store.trustedShops.find(s => s.id === store.state.selectedShopId);
         content = renderShopDetails(shop, store.state);
+    } else if (store.state.currentView === 'mpanel') {
+        content = renderAdminPanel(store.trustedShops);
+        setTimeout(() => window.initAdminEvents(), 0);
     }
 
     app.innerHTML = `
@@ -72,37 +78,31 @@ function render() {
 async function startApp() {
     initTelegram();
     render();
-
     const bar = document.getElementById('loader-bar');
     const percent = document.getElementById('loader-percent');
     let progress = 0;
-
     const interval = setInterval(() => {
-        progress += Math.random() * 15;
+        progress += Math.random() * 20;
         if (progress > 100) progress = 100;
-        
         if (bar) bar.style.width = `${progress}%`;
         if (percent) percent.innerText = Math.floor(progress);
-
         if (progress === 100) {
             clearInterval(interval);
             finishLoading();
         }
-    }, 150);
+    }, 100);
 }
 
 function finishLoading() {
     const splash = document.getElementById('splash');
     const tg = window.Telegram?.WebApp;
-    
     if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-    
     if (splash) {
         splash.classList.add('exit');
         setTimeout(() => {
             store.setState({ isAppLoading: false });
             document.body.style.overflow = 'auto';
-        }, 1000);
+        }, 800);
     }
 }
 
