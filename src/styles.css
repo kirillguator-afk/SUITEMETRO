@@ -1,0 +1,43 @@
+
+:root {
+    --tg-theme-bg-color: #0f172a;
+    --tg-theme-button-color: #10b981;
+}
+
+body {
+    background-color: var(--tg-theme-bg-color);
+}
+
+.glass-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.green-gradient {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 0px;
+}
+
+.review-card {
+    transition: transform 0.2s ease;
+}
+
+.review-card:active {
+    transform: scale(0.98);
+}
+
+.shimmer {
+    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
