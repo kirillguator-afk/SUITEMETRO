@@ -2,57 +2,97 @@
 :root {
     --tg-theme-bg-color: #0f172a;
     --tg-theme-accent: #10b981;
+    --emerald-glow: rgba(16, 185, 129, 0.2);
 }
 
 body {
-    background-color: var(--tg-theme-bg-color);
+    background-color: #020617; /* Глубокий черный для контраста */
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow: hidden;
+    height: 100vh;
 }
 
+/* Живой анимированный фон */
+.mesh-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%);
+    overflow: hidden;
+}
+
+.mesh-bg::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: radial-gradient(circle at 20% 30%, var(--emerald-glow) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(56, 189, 248, 0.1) 0%, transparent 40%);
+    animation: rotateBg 20s linear infinite;
+}
+
+@keyframes rotateBg {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Glassmorphism с эффектом входа */
 .glass-card {
-    background: rgba(30, 41, 59, 0.45);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.green-gradient {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+/* Анимации появления */
+@keyframes reveal {
+    0% { opacity: 0; transform: translateY(30px) scale(0.95); filter: blur(10px); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
+.animate-reveal {
+    animation: reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+/* Эффект при нажатии */
+.active-scale:active {
+    transform: scale(0.96);
+    background: rgba(30, 41, 59, 0.6);
 }
 
-.animate-fade-in-up {
-    animation: fadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+/* Стили для сплэш-скрина */
+#splash.exit {
+    opacity: 0;
+    transform: scale(1.1);
+    filter: blur(20px);
+    pointer-events: none;
 }
 
-.animate-fade-in {
-    animation: fadeIn 0.4s ease forwards;
+.scan-line {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--tg-theme-accent), transparent);
+    opacity: 0.2;
+    animation: scan 2s linear infinite;
 }
 
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.10s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.20s; }
-.stagger-5 { animation-delay: 0.25s; }
-
-.splash-logo {
-    animation: splashLogo 1.2s ease-out forwards;
-}
-
-@keyframes splashLogo {
-    0% { transform: scale(0.8); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+@keyframes scan {
+    0% { top: -100%; }
+    100% { top: 100%; }
 }
 
 ::-webkit-scrollbar { display: none; }

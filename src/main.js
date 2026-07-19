@@ -7,11 +7,18 @@ import { renderSplashScreen } from './components/SplashScreen.js';
 
 const app = document.getElementById('app');
 
-// Глобальная функция для вызова из HTML
+// Глобальная функция навигации
 window.navigateToShop = (id) => {
     const tg = window.Telegram?.WebApp;
-    if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-    store.navigateTo('details', id);
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    
+    // Эффект перехода: Сначала легкое размытие контента
+    const content = document.querySelector('.view-wrapper');
+    if (content) content.style.opacity = '0';
+    
+    setTimeout(() => {
+        store.navigateTo('details', id);
+    }, 200);
 };
 
 function initTelegram() {
@@ -19,53 +26,87 @@ function initTelegram() {
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
+        tg.setHeaderColor('#020617');
         
         tg.BackButton.onClick(() => {
-            store.navigateTo('home');
+            const content = document.querySelector('.view-wrapper');
+            if (content) content.style.opacity = '0';
+            setTimeout(() => store.navigateTo('home'), 200);
         });
     }
 }
 
 function render() {
+    // Если сплэш еще активен, не рендерим основной контент
     if (store.state.isAppLoading) {
-        app.innerHTML = renderSplashScreen();
+        if (!document.getElementById('splash')) {
+            app.innerHTML = renderSplashScreen();
+        }
         return;
     }
 
+    // Отрисовка вьюх с оберткой для анимации
+    let content = '';
     if (store.state.currentView === 'home') {
-        app.innerHTML = `
-            <div class="flex-1 max-w-md mx-auto w-full pb-10">
-                ${renderHeader(store.config)}
-                ${renderShopSection(store.trustedShops)}
-                <footer class="p-8 text-center opacity-30 mt-4">
-                    <p class="text-[9px] font-black tracking-[0.3em] uppercase italic">
-                        Premium Network Protocol
-                    </p>
-                </footer>
-            </div>
+        content = `
+            ${renderHeader(store.config)}
+            ${renderShopSection(store.trustedShops)}
+            <footer class="p-8 text-center opacity-20">
+                <p class="text-[8px] font-black tracking-[0.4em] uppercase">Encrypted Network v2.0</p>
+            </footer>
         `;
     } else {
         const shop = store.trustedShops.find(s => s.id === store.state.selectedShopId);
-        app.innerHTML = `
-            <div class="flex-1 max-w-md mx-auto w-full pb-10">
-                ${renderShopDetails(shop)}
-            </div>
-        `;
+        content = renderShopDetails(shop);
     }
+
+    app.innerHTML = `
+        <div class="mesh-bg"></div>
+        <div class="view-wrapper min-h-screen transition-opacity duration-300 ease-in-out overflow-y-auto">
+            <div class="max-w-md mx-auto w-full pb-10">
+                ${content}
+            </div>
+        </div>
+    `;
 }
 
+// Продвинутая логика загрузки
 async function startApp() {
     initTelegram();
     render();
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const bar = document.getElementById('loader-bar');
+    const percent = document.getElementById('loader-percent');
+    let progress = 0;
 
+    // Имитация плавной загрузки с разными шагами
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 100) progress = 100;
+        
+        if (bar) bar.style.width = `${progress}%`;
+        if (percent) percent.innerText = Math.floor(progress);
+
+        if (progress === 100) {
+            clearInterval(interval);
+            finishLoading();
+        }
+    }, 150);
+}
+
+function finishLoading() {
     const splash = document.getElementById('splash');
+    const tg = window.Telegram?.WebApp;
+    
+    if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+    
     if (splash) {
-        splash.style.opacity = '0';
+        splash.classList.add('exit');
         setTimeout(() => {
             store.setState({ isAppLoading: false });
-        }, 700);
+            // После удаления сплэша разрешаем скролл
+            document.body.style.overflow = 'auto';
+        }, 1000);
     }
 }
 
