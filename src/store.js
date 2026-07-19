@@ -18,7 +18,7 @@ export const store = {
             chat: 'https://t.me/+UtnbRA0g0wg5ZTQ6',
             bot: 'Yakuzashp27bot',
             reviews: 'https://t.me/+QzHJQ9FImBQxNzdi',
-            reviewChannelId: '@Yakuzashp27_reviews', // Условный ID для бота
+            reviewChannelId: 'yakuza_main_node', 
             color: 'emerald'
         },
         {
@@ -26,7 +26,7 @@ export const store = {
             name: 'KOLYAN',
             admin: 'Kolyan_0420',
             chat: 'https://t.me/+F-x6Sr9uGkZmZGJh',
-            reviewChannelId: '@kolyan_reviews',
+            reviewChannelId: 'kolyan_node',
             color: 'green'
         },
         {
@@ -34,7 +34,7 @@ export const store = {
             name: 'FELIXXX',
             chat: 'https://t.me/+0Xt2CWMvSygyMTcx',
             bot: 'boxi_Fill1_bot',
-            reviewChannelId: '@felix_reviews',
+            reviewChannelId: 'felix_node',
             color: 'teal'
         },
         {
@@ -44,7 +44,7 @@ export const store = {
             chat: 'https://t.me/+7WMtiC8037Y4N2Iy',
             bot: 'hapaus_bot',
             reviews: 'https://t.me/+JGqo0wDUWxFmMTIy',
-            reviewChannelId: '@b13_reviews',
+            reviewChannelId: 'b13_node',
             color: 'amber'
         },
         {
@@ -53,7 +53,7 @@ export const store = {
             admin: 'AntiBiotiK35',
             chat: 'https://t.me/+5Cgpn1ycdP9hMDQ6',
             reviews: 'https://telegram.me/+zZeT9yS_KKZmZWQ6',
-            reviewChannelId: '@antibiotik_reviews',
+            reviewChannelId: 'antibiotik_node',
             color: 'rose'
         }
     ],
@@ -85,7 +85,6 @@ export const store = {
         if (tg) {
             if (view === 'details') {
                 tg.BackButton.show();
-                // Загружаем отзывы при переходе
                 this.loadShopReviews(shopId);
             } else {
                 tg.BackButton.hide();
@@ -97,14 +96,14 @@ export const store = {
         const shop = this.trustedShops.find(s => s.id === shopId);
         if (!shop) return;
 
-        this.setState({ isReviewsLoading: true });
+        this.setState({ isReviewsLoading: true, error: null });
         
         try {
             const { TelegramService } = await import('./services/api.js');
             const reviews = await TelegramService.fetchReviewsForShop(shop.reviewChannelId);
             this.setState({ reviews, isReviewsLoading: false });
         } catch (err) {
-            this.setState({ error: "Не удалось загрузить отзывы", isReviewsLoading: false });
+            this.setState({ error: "API Sync Offline", isReviewsLoading: false });
         }
     }
 };
