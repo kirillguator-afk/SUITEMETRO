@@ -1,43 +1,67 @@
 
 :root {
     --tg-theme-bg-color: #0f172a;
-    --tg-theme-button-color: #10b981;
+    --tg-theme-accent: #10b981;
 }
 
 body {
     background-color: var(--tg-theme-bg-color);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
 }
 
 .glass-card {
-    background: rgba(30, 41, 59, 0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
 .green-gradient {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
-/* Custom Scrollbar */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes splashLogo {
+    0% { transform: scale(0.9); opacity: 0; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.splash-logo {
+    animation: splashLogo 1.2s ease-out forwards;
+}
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+.action-btn {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-btn:active {
+    transform: scale(0.9);
+    filter: brightness(1.2);
+}
+
 ::-webkit-scrollbar {
-    width: 0px;
-}
-
-.review-card {
-    transition: transform 0.2s ease;
-}
-
-.review-card:active {
-    transform: scale(0.98);
-}
-
-.shimmer {
-    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    display: none;
 }

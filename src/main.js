@@ -2,69 +2,63 @@
 import { store } from './store.js';
 import { TelegramService } from './services/api.js';
 import { renderHeader } from './components/Header.js';
-import { renderContactSection } from './components/ContactSection.js';
-import { renderReviewsSection } from './components/ReviewsSection.js';
+import { renderShopSection } from './components/ShopSection.js';
+import { renderSplashScreen } from './components/SplashScreen.js';
 
 const app = document.getElementById('app');
 
-/**
- * Инициализация Telegram WebApp
- */
 function initTelegram() {
     if (window.Telegram && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
+        tg.enableClosingConfirmation();
         
-        // Настройка цветов темы из Telegram
-        document.body.style.backgroundColor = tg.backgroundColor || '#0f172a';
-        
-        // Главная кнопка TG
-        tg.MainButton.text = "Связаться в Telegram";
-        tg.MainButton.textColor = "#ffffff";
-        tg.MainButton.color = "#10b981";
-        tg.MainButton.show();
-        tg.MainButton.onClick(() => {
-            window.open(`https://t.me/${store.config.contacts.telegram.replace('@', '')}`, '_blank');
-        });
+        // Haptic Feedback при загрузке
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.impactOccurred('medium');
+        }
     }
 }
 
-/**
- * Основной цикл рендеринга
- */
 function render() {
+    // Если приложение еще "загружается" в стейте, рендерим Splash
+    if (store.state.isAppLoading) {
+        app.innerHTML = renderSplashScreen();
+        return;
+    }
+
     app.innerHTML = `
-        <div class="flex-1 max-w-md mx-auto w-full">
+        <div class="flex-1 max-w-md mx-auto w-full pb-10">
             ${renderHeader(store.config)}
-            ${renderContactSection(store.config.contacts)}
-            ${renderReviewsSection(store.state)}
+            ${renderShopSection(store.trustedShops)}
             
-            <footer class="p-6 text-center">
-                <p class="text-[10px] text-slate-600 font-medium tracking-widest uppercase italic">
-                    Powered by Nexus Prime • 2024
+            <footer class="p-8 text-center opacity-40">
+                <p class="text-[9px] font-black tracking-[0.3em] uppercase">
+                    MTR GREEN NETWORK © 2024
                 </p>
             </footer>
         </div>
     `;
 }
 
-/**
- * Загрузка данных
- */
-async function loadData() {
-    try {
-        const reviews = await TelegramService.fetchReviews();
-        store.setState({ reviews, isLoading: false });
-    } catch (error) {
-        store.setState({ error: error.message, isLoading: false });
+// Запуск анимации исчезновения сплэш-скрина
+async function startApp() {
+    initTelegram();
+    render(); // Показываем сплэш
+
+    // Имитируем загрузку ресурсов
+    await new Promise(resolve => setTimeout(resolve, 2200));
+
+    // Убираем сплэш через opacity для красоты
+    const splash = document.getElementById('splash');
+    if (splash) {
+        splash.style.opacity = '0';
+        setTimeout(() => {
+            store.setState({ isAppLoading: false });
+        }, 700);
     }
 }
 
-// Подписка на изменения стора для реактивности
 store.subscribe(render);
-
-// Запуск
-initTelegram();
-render();
-loadData();
+startApp();
