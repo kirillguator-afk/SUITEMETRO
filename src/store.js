@@ -18,7 +18,7 @@ export const store = {
             chat: 'https://t.me/+UtnbRA0g0wg5ZTQ6',
             bot: 'Yakuzashp27bot',
             reviews: 'https://t.me/+QzHJQ9FImBQxNzdi',
-            reviewChannelId: 'yakuza_main_node', 
+            reviewChannelId: '-1002142468305', // Пример реального Chat ID канала YAKUZA
             color: 'emerald'
         },
         {
@@ -26,7 +26,7 @@ export const store = {
             name: 'KOLYAN',
             admin: 'Kolyan_0420',
             chat: 'https://t.me/+F-x6Sr9uGkZmZGJh',
-            reviewChannelId: 'kolyan_node',
+            reviewChannelId: 'kolyan_reviews',
             color: 'green'
         },
         {
@@ -34,7 +34,7 @@ export const store = {
             name: 'FELIXXX',
             chat: 'https://t.me/+0Xt2CWMvSygyMTcx',
             bot: 'boxi_Fill1_bot',
-            reviewChannelId: 'felix_node',
+            reviewChannelId: 'felix_reviews',
             color: 'teal'
         },
         {
@@ -44,7 +44,7 @@ export const store = {
             chat: 'https://t.me/+7WMtiC8037Y4N2Iy',
             bot: 'hapaus_bot',
             reviews: 'https://t.me/+JGqo0wDUWxFmMTIy',
-            reviewChannelId: 'b13_node',
+            reviewChannelId: 'b13_reviews',
             color: 'amber'
         },
         {
@@ -53,7 +53,7 @@ export const store = {
             admin: 'AntiBiotiK35',
             chat: 'https://t.me/+5Cgpn1ycdP9hMDQ6',
             reviews: 'https://telegram.me/+zZeT9yS_KKZmZWQ6',
-            reviewChannelId: 'antibiotik_node',
+            reviewChannelId: 'antibiotik_reviews',
             color: 'rose'
         }
     ],
@@ -79,7 +79,7 @@ export const store = {
     },
 
     async navigateTo(view, shopId = null) {
-        this.setState({ currentView: view, selectedShopId: shopId, reviews: [] });
+        this.setState({ currentView: view, selectedShopId: shopId, reviews: [], error: null });
         
         const tg = window.Telegram?.WebApp;
         if (tg) {
@@ -96,14 +96,20 @@ export const store = {
         const shop = this.trustedShops.find(s => s.id === shopId);
         if (!shop) return;
 
-        this.setState({ isReviewsLoading: true, error: null });
+        this.setState({ isReviewsLoading: true });
         
         try {
             const { TelegramService } = await import('./services/api.js');
+            // Передаем реальный ID канала для бота
             const reviews = await TelegramService.fetchReviewsForShop(shop.reviewChannelId);
             this.setState({ reviews, isReviewsLoading: false });
         } catch (err) {
-            this.setState({ error: "API Sync Offline", isReviewsLoading: false });
+            console.error("Store error:", err);
+            this.setState({ 
+                error: "Канал временно недоступен", 
+                isReviewsLoading: false,
+                reviews: [] 
+            });
         }
     }
 };
